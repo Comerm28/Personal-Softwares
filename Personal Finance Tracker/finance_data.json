@@ -1,0 +1,12 @@
+{
+    "accounts": {
+        "Fidelity": 16067.25,
+        "BofA - Savings": 4900.23,
+        "BofA - Checkings": 477.14,
+        "Coinbase": 822.3
+    },
+    "transactions": [],
+    "settings": {
+        "currency": "$"
+    }
+}
