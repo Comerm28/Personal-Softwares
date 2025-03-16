@@ -60,7 +60,6 @@ def mark_completed():
         if today not in data["tasks"][task_name]["completions"]:
             data["tasks"][task_name]["completions"].append(today)
             update_list()
-            update_past_days_tab()
             save_data(data)
         else:
             messagebox.showinfo("Info", f"'{task_name}' already completed today.")
@@ -76,7 +75,6 @@ def delete_task():
         if confirm:
             del data["tasks"][task_name]
             update_list()
-            update_past_days_tab()
             save_data(data)
             messagebox.showinfo("Success", f"Task '{task_name}' deleted.")
 
@@ -100,7 +98,6 @@ def edit_task():
             del data["tasks"][old_task_name]
             
             update_list()
-            update_past_days_tab()
             save_data(data)
             messagebox.showinfo("Success", f"Task renamed to '{new_task_name}'")
 
@@ -136,7 +133,6 @@ def check_daily_reset():
         
         data["last_reset"] = today
         update_list()
-        update_past_days_tab()
         save_data(data)
         return True
     return False
@@ -148,32 +144,6 @@ def update_list():
         notes_marker = " 📝" if info.get("notes", "") else ""
         completions = len(info["completions"])
         task_listbox.insert(tk.END, f"{task}{recurring_marker}{notes_marker} - {completions} days completed")
-
-def update_past_days_tab():
-    # Clear the past days treeview
-    for item in past_days_tree.get_children():
-        past_days_tree.delete(item)
-    
-    # Populate with all completed tasks
-    for task, info in data["tasks"].items():
-        if info["completions"]:  # Only show tasks with completions
-            for completion_date in info["completions"]:
-                past_days_tree.insert("", tk.END, values=(task, completion_date))
-
-def show_past_days():
-    selected_task = task_listbox.get(tk.ACTIVE)
-    if selected_task:
-        task_name = selected_task.split(" - ")[0]
-        if "(" in task_name:
-            task_name = task_name.split(" (")[0]
-            
-        past_days = data["tasks"][task_name]["completions"]
-        past_days_window = tk.Toplevel(root)
-        past_days_window.title(f"Past Days for {task_name}")
-        past_days_listbox = tk.Listbox(past_days_window, width=50, height=15)
-        past_days_listbox.pack()
-        for day in past_days:
-            past_days_listbox.insert(tk.END, day)
 
 def edit_notes():
     selected_task = task_listbox.get(tk.ACTIVE)
@@ -832,13 +802,11 @@ tab_control = ttk.Notebook(root)
 
 # Create tabs
 todo_tab = ttk.Frame(tab_control)
-past_days_tab = ttk.Frame(tab_control)
 four_month_tab = ttk.Frame(tab_control)
 five_year_tab = ttk.Frame(tab_control)
 lifetime_tab = ttk.Frame(tab_control)  # Add this line
 
 tab_control.add(todo_tab, text='Daily Tasks')
-tab_control.add(past_days_tab, text='Past Days')
 tab_control.add(four_month_tab, text='4-Month Goals')
 tab_control.add(five_year_tab, text='5-Year Goals')
 tab_control.add(lifetime_tab, text='Lifetime Goals')  # Add this line
@@ -866,9 +834,6 @@ view_details_button.pack(side=tk.LEFT, padx=5)
 edit_notes_button = tk.Button(button_frame, text="Edit Notes", command=edit_notes)
 edit_notes_button.pack(side=tk.LEFT, padx=5)
 
-view_past_days_button = tk.Button(button_frame, text="View Past Days", command=show_past_days)
-view_past_days_button.pack(side=tk.LEFT, padx=5)
-
 edit_button = tk.Button(button_frame, text="Edit Task", command=edit_task)
 edit_button.pack(side=tk.LEFT, padx=5)
 
@@ -880,21 +845,6 @@ toggle_button.pack(side=tk.LEFT, padx=5)
 
 exit_button = tk.Button(button_frame, text="Exit", command=exit_app)
 exit_button.pack(side=tk.RIGHT, padx=5)
-
-# Past Days Tab
-past_days_tree = ttk.Treeview(past_days_tab, columns=("Task", "Date"), show="headings")
-past_days_tree.heading("Task", text="Task")
-past_days_tree.heading("Date", text="Completion Date")
-past_days_tree.column("Task", width=200)
-past_days_tree.column("Date", width=150)
-past_days_tree.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
-
-# Populate the past days tab
-update_past_days_tab()
-
-# Add a button to refresh the past days view
-refresh_button = tk.Button(past_days_tab, text="Refresh", command=update_past_days_tab)
-refresh_button.pack(pady=5)
 
 # 4-Month Goals Tab
 four_month_listbox = tk.Listbox(four_month_tab, width=80, height=15, font=("Arial", 10))
