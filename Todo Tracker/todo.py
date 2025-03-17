@@ -70,6 +70,8 @@ def delete_task():
         task_name = selected_task.split(" - ")[0]
         if "(" in task_name:
             task_name = task_name.split(" (")[0]
+        if "📝" in task_name:
+            task_name = task_name.split(" 📝")[0]
             
         confirm = messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete '{task_name}'?")
         if confirm:
