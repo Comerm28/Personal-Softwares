@@ -134,7 +134,11 @@ class JournalApp:
     
     def load_journal_list(self):
         self.journal_list.delete(0, tk.END)
-        for entry in self.entries:
+        
+        # Sort entries by date, most recent first
+        sorted_entries = sorted(self.entries, key=lambda x: x['date'], reverse=True)
+        
+        for entry in sorted_entries:
             # Use the cached word count if available, otherwise calculate it
             if "word_count" not in entry:
                 # For backwards compatibility with older entries
