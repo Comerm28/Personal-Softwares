@@ -107,7 +107,13 @@ class JournalApp:
         entry_content = self.entry_text.get("1.0", tk.END).strip()
         if entry_content:
             entry_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.entries.append({"date": entry_date, "content": entry_content})
+            # Calculate and store word count at save time
+            word_count = len(entry_content.split())
+            self.entries.append({
+                "date": entry_date,
+                "content": entry_content,
+                "word_count": word_count  # Cache the word count
+            })
             self.save_entries()
             self.entry_text.delete("1.0", tk.END)
             self.load_journal_list()
@@ -129,7 +135,13 @@ class JournalApp:
     def load_journal_list(self):
         self.journal_list.delete(0, tk.END)
         for entry in self.entries:
-            self.journal_list.insert(tk.END, entry['date'])
+            # Use the cached word count if available, otherwise calculate it
+            if "word_count" not in entry:
+                # For backwards compatibility with older entries
+                entry["word_count"] = len(entry["content"].split())
+            
+            # Display date with word count
+            self.journal_list.insert(tk.END, f"{entry['date']} | {entry['word_count']} words")
     
     def open_entry(self):
         selected_index = self.journal_list.curselection()
