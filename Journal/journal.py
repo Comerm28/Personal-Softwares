@@ -150,7 +150,9 @@ class JournalApp:
     def open_entry(self):
         selected_index = self.journal_list.curselection()
         if selected_index:
-            entry = self.entries[selected_index[0]]
+            # Get the corresponding entry from the sorted list
+            sorted_entries = sorted(self.entries, key=lambda x: x['date'], reverse=True)
+            entry = sorted_entries[selected_index[0]]
             self.show_entry_window(entry)
         else:
             messagebox.showwarning("Warning", "No entry selected!")
@@ -208,7 +210,16 @@ class JournalApp:
         if selected_index:
             confirm = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this entry?")
             if confirm:
-                del self.entries[selected_index[0]]
+                # Get the corresponding entry from the sorted list
+                sorted_entries = sorted(self.entries, key=lambda x: x['date'], reverse=True)
+                entry_to_delete = sorted_entries[selected_index[0]]
+                
+                # Find and remove this entry from the main list
+                for i, entry in enumerate(self.entries):
+                    if entry['date'] == entry_to_delete['date']:
+                        del self.entries[i]
+                        break
+                
                 self.save_entries()
                 self.load_journal_list()
                 messagebox.showinfo("Success", "Journal entry deleted!")
