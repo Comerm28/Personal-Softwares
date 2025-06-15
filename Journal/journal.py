@@ -104,15 +104,15 @@ class JournalApp:
         self.load_journal_list()
         
     def save_entry(self):
-        entry_content = self.entry_text.get("1.0", tk.END).strip()
+        entry_content = self.entry_text.get("1.0", tk.END).rstrip()
         if entry_content:
             entry_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            # Calculate and store word count at save time
             word_count = len(entry_content.split())
             self.entries.append({
                 "date": entry_date,
                 "content": entry_content,
-                "word_count": word_count  # Cache the word count
+                "word_count": word_count,
+                "flagged": False
             })
             self.save_entries()
             self.entry_text.delete("1.0", tk.END)
@@ -134,18 +134,15 @@ class JournalApp:
     
     def load_journal_list(self):
         self.journal_list.delete(0, tk.END)
-        
-        # Sort entries by date, most recent first
-        sorted_entries = sorted(self.entries, key=lambda x: x['date'], reverse=True)
-        
+        sorted_entries = sorted(self.entries,
+                                key=lambda x: x['date'],
+                                reverse=True)
         for entry in sorted_entries:
-            # Use the cached word count if available, otherwise calculate it
-            if "word_count" not in entry:
-                # For backwards compatibility with older entries
-                entry["word_count"] = len(entry["content"].split())
-            
-            # Display date with word count
-            self.journal_list.insert(tk.END, f"{entry['date']} | {entry['word_count']} words")
+            marker = "★ " if entry.get("flagged") else ""
+            self.journal_list.insert(
+                tk.END,
+                f"{marker}{entry['date']} | {entry['word_count']} words"
+            )
     
     def open_entry(self):
         selected_index = self.journal_list.curselection()
@@ -156,6 +153,11 @@ class JournalApp:
             self.show_entry_window(entry)
         else:
             messagebox.showwarning("Warning", "No entry selected!")
+    
+    def toggle_flag(self, entry):
+        entry["flagged"] = not entry.get("flagged", False)
+        self.save_entries()
+        self.load_journal_list()
     
     def show_entry_window(self, entry):
         entry_window = tk.Toplevel(self.root)
@@ -203,7 +205,23 @@ class JournalApp:
                                width=10, font=("Arial", 10), bg=self.accent_color, fg="white",
                                activebackground=self.highlight_color, activeforeground="white",
                                relief=tk.FLAT, padx=10, pady=5)
-        close_button.pack()
+        close_button.pack(side=tk.LEFT, padx=5)
+
+        flag_text = "Unflag" if entry.get("flagged") else "Mark to revisit"
+        flag_button = tk.Button(
+            button_frame,
+            text=flag_text,
+            command=lambda: self.toggle_flag(entry),
+            bg=self.accent_color,
+            fg="white",
+            activebackground=self.highlight_color,
+            activeforeground="white",
+            font=("Arial", 10),
+            relief=tk.FLAT,
+            padx=10,
+            pady=5
+        )
+        flag_button.pack(side=tk.LEFT, padx=5)
         
     def delete_entry(self):
         selected_index = self.journal_list.curselection()
