@@ -8,19 +8,17 @@ class JournalApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Journal App")
-        self.root.geometry("800x600")  # Set a default size
+        self.root.geometry("800x600") 
         
-        # Dark mode colors
         self.bg_color = "#2d2d2d"
         self.text_bg = "#3d3d3d"
         self.text_fg = "#ffffff"
-        self.accent_color = "#5c6bc0"  # A nice purple-blue color
+        self.accent_color = "#5c6bc0"
         self.highlight_color = "#7986cb"
         
-        # Apply theme to root window
         self.root.configure(bg=self.bg_color)
         self.style = ttk.Style()
-        self.style.theme_use('default')  # Start with default theme as base
+        self.style.theme_use('default') 
         self.style.configure("TFrame", background=self.bg_color)
         self.style.configure("TNotebook", background=self.bg_color)
         self.style.configure("TNotebook.Tab", 
@@ -29,7 +27,6 @@ class JournalApp:
                             padding=[10, 2],
                             font=("Arial", 10))
 
-        # Override the tab colors more explicitly
         self.style.map("TNotebook.Tab", 
                       background=[("selected", self.accent_color), ("!selected", "#444444")],
                       foreground=[("selected", "#ffffff"), ("!selected", "#ffffff")])
@@ -49,21 +46,17 @@ class JournalApp:
         
         self.tab_control.pack(expand=1, fill='both')
         
-        # Configure the entry tab to expand properly
         self.entry_tab.columnconfigure(0, weight=1)
         self.entry_tab.rowconfigure(0, weight=1)
         
-        # Entry Tab with expandable text area
         self.entry_text = tk.Text(self.entry_tab, wrap='word', bg=self.text_bg, fg=self.text_fg, 
                                 insertbackground=self.text_fg, font=("Arial", 11))
         self.entry_text.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         
-        # Add scrollbar to entry text
         entry_scrollbar = tk.Scrollbar(self.entry_tab, command=self.entry_text.yview)
         entry_scrollbar.grid(row=0, column=1, sticky="ns")
         self.entry_text['yscrollcommand'] = entry_scrollbar.set
         
-        # Button frame in entry tab
         entry_button_frame = tk.Frame(self.entry_tab, bg=self.bg_color)
         entry_button_frame.grid(row=1, column=0, columnspan=2, pady=10)
         
@@ -73,21 +66,17 @@ class JournalApp:
                                    padx=10, pady=5)
         self.save_button.pack()
         
-        # Configure the view tab to expand properly
         self.view_tab.columnconfigure(0, weight=1)
         self.view_tab.rowconfigure(0, weight=1)
         
-        # View Tab with expandable list
         self.journal_list = tk.Listbox(self.view_tab, font=("Arial", 10), bg=self.text_bg, fg=self.text_fg,
                                     selectbackground=self.accent_color, selectforeground="white")
         self.journal_list.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         
-        # Add scrollbar to journal list
         list_scrollbar = tk.Scrollbar(self.view_tab, command=self.journal_list.yview)
         list_scrollbar.grid(row=0, column=1, sticky="ns")
         self.journal_list['yscrollcommand'] = list_scrollbar.set
         
-        # Button frame in view tab
         view_button_frame = tk.Frame(self.view_tab, bg=self.bg_color)
         view_button_frame.grid(row=1, column=0, columnspan=2, pady=10)
         
@@ -147,7 +136,6 @@ class JournalApp:
     def open_entry(self):
         selected_index = self.journal_list.curselection()
         if selected_index:
-            # Get the corresponding entry from the sorted list
             sorted_entries = sorted(self.entries, key=lambda x: x['date'], reverse=True)
             entry = sorted_entries[selected_index[0]]
             self.show_entry_window(entry)
@@ -162,25 +150,21 @@ class JournalApp:
     def show_entry_window(self, entry):
         entry_window = tk.Toplevel(self.root)
         entry_window.title(f"Journal Entry - {entry['date']}")
-        entry_window.geometry("800x600")  # Set a default size
+        entry_window.geometry("800x600") 
         entry_window.configure(bg=self.bg_color)
         
-        # Make the window resizable
         entry_window.columnconfigure(0, weight=1)
         entry_window.rowconfigure(0, weight=1)
         
-        # Content frame
         content_frame = tk.Frame(entry_window, bg=self.bg_color)
         content_frame.grid(row=0, column=0, padx=15, pady=15, sticky="nsew")
         content_frame.columnconfigure(0, weight=1)
         content_frame.rowconfigure(1, weight=1)
         
-        # Date label
         date_label = tk.Label(content_frame, text=entry['date'], font=("Arial", 12, "bold"),
                              bg=self.bg_color, fg=self.text_fg)
         date_label.grid(row=0, column=0, sticky="w", pady=(0, 10))
         
-        # Text frame with scrollbar
         text_frame = tk.Frame(content_frame, bg=self.bg_color)
         text_frame.grid(row=1, column=0, sticky="nsew")
         text_frame.columnconfigure(0, weight=1)
@@ -197,7 +181,6 @@ class JournalApp:
         entry_text.insert(tk.END, entry['content'])
         entry_text.config(state=tk.DISABLED)
         
-        # Button frame
         button_frame = tk.Frame(entry_window, bg=self.bg_color)
         button_frame.grid(row=1, column=0, pady=10)
         
@@ -228,11 +211,9 @@ class JournalApp:
         if selected_index:
             confirm = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this entry?")
             if confirm:
-                # Get the corresponding entry from the sorted list
                 sorted_entries = sorted(self.entries, key=lambda x: x['date'], reverse=True)
                 entry_to_delete = sorted_entries[selected_index[0]]
                 
-                # Find and remove this entry from the main list
                 for i, entry in enumerate(self.entries):
                     if entry['date'] == entry_to_delete['date']:
                         del self.entries[i]

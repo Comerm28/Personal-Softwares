@@ -6,18 +6,17 @@ import os
 
 class CookingApp:
     def __init__(self, root):
+        # Initialize the Cooking app with dark mode and UI setup
         self.root = root
         self.root.title("Recipe Collection")
-        self.root.geometry("800x600")  # Set a default size
+        self.root.geometry("800x600")
         
-        # Dark mode colors
         self.bg_color = "#2d2d2d"
         self.text_bg = "#3d3d3d"
         self.text_fg = "#ffffff"
-        self.accent_color = "#d35400"  # Orange color for cooking theme
+        self.accent_color = "#d35400"
         self.highlight_color = "#e67e22"
         
-        # Apply theme to root window
         self.root.configure(bg=self.bg_color)
         self.style = ttk.Style()
         self.style.theme_use('default')
@@ -34,10 +33,10 @@ class CookingApp:
                       foreground=[("selected", "#ffffff"), ("!selected", "#ffffff")])
         
         self.recipes = self.load_recipes()
-        
         self.create_widgets()
         
     def create_widgets(self):
+        # Create the UI widgets for the Cooking app
         self.tab_control = ttk.Notebook(self.root)
         
         self.new_recipe_tab = ttk.Frame(self.tab_control)
@@ -48,12 +47,9 @@ class CookingApp:
         
         self.tab_control.pack(expand=1, fill='both')
         
-        # Configure the new recipe tab to expand properly
         self.new_recipe_tab.columnconfigure(0, weight=1)
         self.new_recipe_tab.rowconfigure(2, weight=1)
         
-        # New Recipe Tab
-        # Recipe name entry
         name_frame = tk.Frame(self.new_recipe_tab, bg=self.bg_color)
         name_frame.grid(row=0, column=0, padx=10, pady=(10,5), sticky="ew")
         
@@ -65,7 +61,6 @@ class CookingApp:
                                         relief=tk.FLAT, width=40)
         self.recipe_name_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
         
-        # Ingredients section
         ingredients_frame = tk.Frame(self.new_recipe_tab, bg=self.bg_color)
         ingredients_frame.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
         
@@ -81,7 +76,6 @@ class CookingApp:
         ingredients_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.ingredients_text['yscrollcommand'] = ingredients_scrollbar.set
         
-        # Instructions section with expandable text area
         tk.Label(self.new_recipe_tab, text="Instructions:", bg=self.bg_color, fg=self.text_fg, 
                 font=("Arial", 10, "bold")).grid(row=2, column=0, padx=10, pady=(5,0), sticky="nw")
         
@@ -98,7 +92,6 @@ class CookingApp:
         instructions_scrollbar.grid(row=0, column=1, sticky="ns")
         self.instructions_text['yscrollcommand'] = instructions_scrollbar.set
         
-        # Button frame in new recipe tab
         button_frame = tk.Frame(self.new_recipe_tab, bg=self.bg_color)
         button_frame.grid(row=4, column=0, pady=10)
         
@@ -114,21 +107,17 @@ class CookingApp:
                                     padx=10, pady=5)
         self.clear_button.pack(side=tk.LEFT, padx=5)
         
-        # Configure the view recipes tab to expand properly
         self.view_recipes_tab.columnconfigure(0, weight=1)
         self.view_recipes_tab.rowconfigure(0, weight=1)
         
-        # View Recipes Tab with expandable list
         self.recipe_list = tk.Listbox(self.view_recipes_tab, font=("Arial", 10), bg=self.text_bg, fg=self.text_fg,
                                    selectbackground=self.accent_color, selectforeground="white")
         self.recipe_list.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         
-        # Add scrollbar to recipe list
         list_scrollbar = tk.Scrollbar(self.view_recipes_tab, command=self.recipe_list.yview)
         list_scrollbar.grid(row=0, column=1, sticky="ns")
         self.recipe_list['yscrollcommand'] = list_scrollbar.set
         
-        # Button frame in view recipes tab
         view_button_frame = tk.Frame(self.view_recipes_tab, bg=self.bg_color)
         view_button_frame.grid(row=1, column=0, columnspan=2, pady=10)
         
@@ -152,6 +141,7 @@ class CookingApp:
         self.load_recipe_list()
         
     def save_recipe(self):
+        # Save a new recipe or update an existing one
         recipe_name = self.recipe_name_entry.get().strip()
         ingredients = self.ingredients_text.get("1.0", tk.END).strip()
         instructions = self.instructions_text.get("1.0", tk.END).strip()
@@ -168,11 +158,9 @@ class CookingApp:
             messagebox.showwarning("Warning", "Instructions cannot be empty!")
             return
         
-        # Check if we're editing an existing recipe or creating a new one
         editing = False
         for i, recipe in enumerate(self.recipes):
             if recipe["name"] == self.editing_recipe_name if hasattr(self, 'editing_recipe_name') else None:
-                # Update existing recipe
                 self.recipes[i] = {
                     "name": recipe_name,
                     "ingredients": ingredients,
@@ -185,7 +173,6 @@ class CookingApp:
                 break
         
         if not editing:
-            # Add new recipe
             self.recipes.append({
                 "name": recipe_name,
                 "ingredients": ingredients,
@@ -199,6 +186,7 @@ class CookingApp:
         messagebox.showinfo("Success", f"Recipe '{recipe_name}' saved!")
         
     def clear_form(self):
+        # Clear the recipe entry form
         self.recipe_name_entry.delete(0, tk.END)
         self.ingredients_text.delete("1.0", tk.END)
         self.instructions_text.delete("1.0", tk.END)
@@ -206,6 +194,7 @@ class CookingApp:
             delattr(self, 'editing_recipe_name')
         
     def load_recipes(self):
+        # Load recipes from the JSON file
         try:
             if not os.path.exists("Cooking"):
                 os.makedirs("Cooking")
@@ -219,6 +208,7 @@ class CookingApp:
             return []
     
     def save_recipes(self):
+        # Save recipes to the JSON file
         try:
             if not os.path.exists("Cooking"):
                 os.makedirs("Cooking")
@@ -229,17 +219,15 @@ class CookingApp:
             messagebox.showerror("Error", f"Failed to save recipes: {str(e)}")
     
     def load_recipe_list(self):
+        # Load the recipe list into the UI
         self.recipe_list.delete(0, tk.END)
-        
-        # Sort recipes alphabetically by name
         sorted_recipes = sorted(self.recipes, key=lambda x: x["name"])
-        
         for recipe in sorted_recipes:
-            # Display recipe name with ingredient count
             ingredient_count = recipe.get("ingredient_count", len(recipe["ingredients"].split('\n')))
             self.recipe_list.insert(tk.END, f"{recipe['name']} | {ingredient_count} ingredients")
     
     def view_recipe(self):
+        # View the full recipe details
         selected_index = self.recipe_list.curselection()
         if selected_index:
             recipe_name = self.recipe_list.get(selected_index[0]).split(" | ")[0]
@@ -250,6 +238,7 @@ class CookingApp:
             messagebox.showwarning("Warning", "No recipe selected!")
     
     def view_ingredients(self):
+        # View only the ingredients of a recipe
         selected_index = self.recipe_list.curselection()
         if selected_index:
             recipe_name = self.recipe_list.get(selected_index[0]).split(" | ")[0]
@@ -260,30 +249,25 @@ class CookingApp:
             messagebox.showwarning("Warning", "No recipe selected!")
     
     def edit_recipe(self):
+        # Edit an existing recipe
         selected_index = self.recipe_list.curselection()
         if selected_index:
             recipe_name = self.recipe_list.get(selected_index[0]).split(" | ")[0]
             recipe = self.find_recipe_by_name(recipe_name)
             if recipe:
-                # Switch to the new recipe tab
                 self.tab_control.select(0)
-                
-                # Fill the form with the recipe data
                 self.recipe_name_entry.delete(0, tk.END)
                 self.recipe_name_entry.insert(0, recipe["name"])
-                
                 self.ingredients_text.delete("1.0", tk.END)
                 self.ingredients_text.insert("1.0", recipe["ingredients"])
-                
                 self.instructions_text.delete("1.0", tk.END)
                 self.instructions_text.insert("1.0", recipe["instructions"])
-                
-                # Mark that we're editing this recipe
                 self.editing_recipe_name = recipe["name"]
         else:
             messagebox.showwarning("Warning", "No recipe selected!")
     
     def delete_recipe(self):
+        # Delete a recipe from the collection
         selected_index = self.recipe_list.curselection()
         if selected_index:
             recipe_name = self.recipe_list.get(selected_index[0]).split(" | ")[0]
@@ -294,7 +278,6 @@ class CookingApp:
                     if recipe["name"] == recipe_name:
                         del self.recipes[i]
                         break
-                
                 self.save_recipes()
                 self.load_recipe_list()
                 messagebox.showinfo("Success", f"Recipe '{recipe_name}' deleted!")
@@ -302,12 +285,14 @@ class CookingApp:
             messagebox.showwarning("Warning", "No recipe selected!")
     
     def find_recipe_by_name(self, name):
+        # Find a recipe by its name
         for recipe in self.recipes:
             if recipe["name"] == name:
                 return recipe
         return None
     
     def show_recipe_window(self, recipe):
+        # Show the full recipe details in a new window
         recipe_window = tk.Toplevel(self.root)
         recipe_window.title(f"Recipe: {recipe['name']}")
         recipe_window.geometry("800x600")
@@ -316,7 +301,6 @@ class CookingApp:
         recipe_window.columnconfigure(0, weight=1)
         recipe_window.rowconfigure(1, weight=1)
         
-        # Recipe name header
         header_frame = tk.Frame(recipe_window, bg=self.bg_color)
         header_frame.grid(row=0, column=0, padx=15, pady=(15,5), sticky="ew")
         
@@ -324,13 +308,11 @@ class CookingApp:
                                    bg=self.bg_color, fg=self.text_fg)
         recipe_name_label.pack(anchor="w")
         
-        # Content frame
         content_frame = tk.Frame(recipe_window, bg=self.bg_color)
         content_frame.grid(row=1, column=0, padx=15, pady=5, sticky="nsew")
         content_frame.columnconfigure(0, weight=1)
         content_frame.rowconfigure(1, weight=1)
         
-        # Ingredients section
         tk.Label(content_frame, text="Ingredients:", font=("Arial", 12, "bold"),
                bg=self.bg_color, fg=self.text_fg).grid(row=0, column=0, sticky="w", pady=(0, 5))
         
@@ -350,7 +332,6 @@ class CookingApp:
         ingredients_text.insert(tk.END, recipe['ingredients'])
         ingredients_text.config(state=tk.DISABLED)
         
-        # Instructions section
         tk.Label(content_frame, text="Instructions:", font=("Arial", 12, "bold"),
                bg=self.bg_color, fg=self.text_fg).grid(row=2, column=0, sticky="w", pady=(10, 5))
         
@@ -370,7 +351,6 @@ class CookingApp:
         instructions_text.insert(tk.END, recipe['instructions'])
         instructions_text.config(state=tk.DISABLED)
         
-        # Button frame
         button_frame = tk.Frame(recipe_window, bg=self.bg_color)
         button_frame.grid(row=2, column=0, pady=10)
         
@@ -381,6 +361,7 @@ class CookingApp:
         close_button.pack()
     
     def show_ingredients_window(self, recipe):
+        # Show only the ingredients of a recipe in a new window
         ingredients_window = tk.Toplevel(self.root)
         ingredients_window.title(f"Ingredients for: {recipe['name']}")
         ingredients_window.geometry("500x400")
@@ -389,7 +370,6 @@ class CookingApp:
         ingredients_window.columnconfigure(0, weight=1)
         ingredients_window.rowconfigure(1, weight=1)
         
-        # Recipe name header
         header_frame = tk.Frame(ingredients_window, bg=self.bg_color)
         header_frame.grid(row=0, column=0, padx=15, pady=(15,5), sticky="ew")
         
@@ -397,7 +377,6 @@ class CookingApp:
                                    bg=self.bg_color, fg=self.text_fg)
         recipe_name_label.pack(anchor="w")
         
-        # Ingredients section
         ingredients_frame = tk.Frame(ingredients_window, bg=self.bg_color)
         ingredients_frame.grid(row=1, column=0, padx=15, pady=5, sticky="nsew")
         ingredients_frame.columnconfigure(0, weight=1)
@@ -414,7 +393,6 @@ class CookingApp:
         ingredients_text.insert(tk.END, recipe['ingredients'])
         ingredients_text.config(state=tk.DISABLED)
         
-        # Button frame
         button_frame = tk.Frame(ingredients_window, bg=self.bg_color)
         button_frame.grid(row=2, column=0, pady=10)
         

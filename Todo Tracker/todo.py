@@ -11,13 +11,11 @@ def load_data():
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
             
-            # Add notes field to any existing tasks that don't have it
             if "tasks" in data:
                 for task_name, task_data in data["tasks"].items():
                     if "notes" not in task_data:
                         task_data["notes"] = ""
             
-            # Make sure lifetime_goals exists
             if "lifetime_goals" not in data:
                 data["lifetime_goals"] = {}
                 
@@ -34,7 +32,6 @@ def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
-# Daily tasks functions
 def add_task():
     task = simpledialog.askstring("Add Task", "Enter task name:")
     if task and task not in data["tasks"]:
@@ -90,12 +87,10 @@ def edit_task():
         new_task_name = simpledialog.askstring("Edit Task", "Enter new task name:", initialvalue=old_task_name)
         
         if new_task_name and new_task_name != old_task_name:
-            # Check if the new name already exists
             if new_task_name in data["tasks"]:
                 messagebox.showerror("Error", f"Task '{new_task_name}' already exists.")
                 return
                 
-            # Copy completion data to new task name and delete old one
             data["tasks"][new_task_name] = data["tasks"][old_task_name]
             del data["tasks"][old_task_name]
             
@@ -120,12 +115,10 @@ def toggle_recurring():
 def check_daily_reset():
     today = str(date.today())
     if "last_reset" not in data or data["last_reset"] != today:
-        # It's a new day, reset non-recurring tasks
         non_recurring_tasks = [task for task, info in data["tasks"].items() 
                                if not info["recurring"]]
         
         for task in non_recurring_tasks:
-            # If the task was completed yesterday, delete it
             if data["tasks"][task]["completions"]:
                 latest_completion = data["tasks"][task]["completions"][-1]
                 latest_date = datetime.strptime(latest_completion, "%Y-%m-%d").date()
@@ -154,19 +147,16 @@ def edit_notes():
         if "(" in task_name:
             task_name = task_name.split(" (")[0]
             
-        # Get current notes
         current_notes = data["tasks"][task_name].get("notes", "")
         
-        # Show dialog to edit notes
         new_notes = simpledialog.askstring("Edit Notes", 
                                          f"Notes for '{task_name}':",
                                          initialvalue=current_notes)
         
-        if new_notes is not None:  # User didn't cancel
+        if new_notes is not None: 
             data["tasks"][task_name]["notes"] = new_notes
             save_data(data)
             
-            # Show indicator that this task has notes
             update_list()
 
 def view_task_details():
@@ -180,32 +170,26 @@ def view_task_details():
             
         task_info = data["tasks"][task_name]
         
-        # Create a new window to show task details
         details_window = tk.Toplevel(root)
         details_window.title(f"Details for '{task_name}'")
         details_window.geometry("400x300")
-        
-        # Task name
+       
         tk.Label(details_window, text="Task:", font=("Arial", 10, "bold")).grid(row=0, column=0, sticky=tk.W, padx=10, pady=5)
         tk.Label(details_window, text=task_name).grid(row=0, column=1, sticky=tk.W, padx=10, pady=5)
         
-        # Recurring status
         tk.Label(details_window, text="Recurring:", font=("Arial", 10, "bold")).grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
         tk.Label(details_window, text="Yes" if task_info["recurring"] else "No").grid(row=1, column=1, sticky=tk.W, padx=10, pady=5)
-        
-        # Completion count
+
         tk.Label(details_window, text="Times Completed:", font=("Arial", 10, "bold")).grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
         tk.Label(details_window, text=str(len(task_info["completions"]))).grid(row=2, column=1, sticky=tk.W, padx=10, pady=5)
-        
-        # Notes
+
         tk.Label(details_window, text="Notes:", font=("Arial", 10, "bold")).grid(row=3, column=0, sticky=tk.NW, padx=10, pady=5)
         
         notes_text = tk.Text(details_window, wrap=tk.WORD, width=30, height=8)
         notes_text.grid(row=3, column=1, sticky=tk.W, padx=10, pady=5)
         notes_text.insert(tk.END, task_info.get("notes", ""))
-        notes_text.config(state=tk.DISABLED)  # Make read-only
-        
-        # Button to edit notes
+        notes_text.config(state=tk.DISABLED)  
+      
         def edit_from_details():
             new_notes = simpledialog.askstring("Edit Notes", 
                                              f"Notes for '{task_name}':",
@@ -228,7 +212,6 @@ def view_task_details():
         close_btn = tk.Button(button_frame, text="Close", command=details_window.destroy)
         close_btn.pack(side=tk.LEFT, padx=5)
 
-# 4-Month Goals functions
 def add_four_month_goal():
     goal = simpledialog.askstring("Add 4-Month Goal", "Enter goal description:")
     if goal and goal not in data["four_month_goals"]:
@@ -236,7 +219,6 @@ def add_four_month_goal():
                                             "Enter target completion date (YYYY-MM-DD):",
                                             initialvalue=str(date.today() + timedelta(days=120)))
         try:
-            # Validate date format
             datetime.strptime(target_date, "%Y-%m-%d")
             data["four_month_goals"][goal] = {
                 "target_date": target_date,
@@ -259,16 +241,13 @@ def edit_four_month_goal():
                 messagebox.showerror("Error", "This goal already exists.")
                 return
                 
-            # Copy goal data to new name and delete old one
             data["four_month_goals"][new_goal] = data["four_month_goals"][goal_name]
             del data["four_month_goals"][goal_name]
             
-            # Update target date
             target_date = simpledialog.askstring("Target Date", 
                                                "Enter target completion date (YYYY-MM-DD):",
                                                initialvalue=data["four_month_goals"][new_goal]["target_date"])
             try:
-                # Validate date format
                 datetime.strptime(target_date, "%Y-%m-%d")
                 data["four_month_goals"][new_goal]["target_date"] = target_date
                 update_four_month_goals_list()
@@ -283,9 +262,9 @@ def toggle_four_month_goal_completion():
         current_state = data["four_month_goals"][goal_name]["completed"]
         data["four_month_goals"][goal_name]["completed"] = not current_state
         
-        if not current_state:  # If completing the goal
+        if not current_state: 
             data["four_month_goals"][goal_name]["completion_date"] = str(date.today())
-        else:  # If un-completing the goal
+        else:  
             data["four_month_goals"][goal_name]["completion_date"] = None
             
         update_four_month_goals_list()
@@ -304,7 +283,6 @@ def delete_four_month_goal():
 def update_four_month_goals_list():
     four_month_listbox.delete(0, tk.END)
     
-    # Sort goals by completion status and then by target date
     sorted_goals = sorted(
         data["four_month_goals"].items(),
         key=lambda x: (x[1]["completed"], x[1]["target_date"])
@@ -314,7 +292,6 @@ def update_four_month_goals_list():
         status = "✓" if info["completed"] else "□"
         target_date = info["target_date"]
         
-        # Calculate days remaining
         if not info["completed"]:
             try:
                 target = datetime.strptime(target_date, "%Y-%m-%d").date()
@@ -332,7 +309,6 @@ def update_four_month_goals_list():
             
         four_month_listbox.insert(tk.END, f"{goal} | {status} | {target_date} | {days_info}")
 
-# 5-Year Goals functions
 def add_five_year_goal():
     goal = simpledialog.askstring("Add 5-Year Goal", "Enter goal description:")
     if goal and goal not in data["five_year_goals"]:
@@ -340,7 +316,6 @@ def add_five_year_goal():
                                            "Enter target completion date (YYYY-MM-DD):",
                                            initialvalue=str(date.today() + timedelta(days=365*5)))
         try:
-            # Validate date format
             datetime.strptime(target_date, "%Y-%m-%d")
             data["five_year_goals"][goal] = {
                 "target_date": target_date,
@@ -364,16 +339,13 @@ def edit_five_year_goal():
                 messagebox.showerror("Error", "This goal already exists.")
                 return
                 
-            # Copy goal data to new name and delete old one
             data["five_year_goals"][new_goal] = data["five_year_goals"][goal_name]
             del data["five_year_goals"][goal_name]
-            
-            # Update target date
+         
             target_date = simpledialog.askstring("Target Date", 
                                                "Enter target completion date (YYYY-MM-DD):",
                                                initialvalue=data["five_year_goals"][new_goal]["target_date"])
             try:
-                # Validate date format
                 datetime.strptime(target_date, "%Y-%m-%d")
                 data["five_year_goals"][new_goal]["target_date"] = target_date
                 update_five_year_goals_list()
@@ -388,9 +360,9 @@ def toggle_five_year_goal_completion():
         current_state = data["five_year_goals"][goal_name]["completed"]
         data["five_year_goals"][goal_name]["completed"] = not current_state
         
-        if not current_state:  # If completing the goal
+        if not current_state:  
             data["five_year_goals"][goal_name]["completion_date"] = str(date.today())
-        else:  # If un-completing the goal
+        else: 
             data["five_year_goals"][goal_name]["completion_date"] = None
             
         update_five_year_goals_list()
@@ -416,7 +388,6 @@ def add_milestone():
                                                "Enter target date for milestone (YYYY-MM-DD):",
                                                initialvalue=str(date.today() + timedelta(days=90)))
             try:
-                # Validate date format
                 datetime.strptime(target_date, "%Y-%m-%d")
                 data["five_year_goals"][goal_name]["milestones"].append({
                     "description": milestone,
@@ -438,17 +409,14 @@ def view_milestones():
         milestone_window = tk.Toplevel(root)
         milestone_window.title(f"Milestones for '{goal_name}'")
         milestone_window.geometry("600x400")
-        
-        # Create treeview for milestones
+
         columns = ("Description", "Target Date", "Status", "Completion Date")
         milestone_tree = ttk.Treeview(milestone_window, columns=columns, show="headings")
-        
-        # Define column headings
+
         for col in columns:
             milestone_tree.heading(col, text=col)
             milestone_tree.column(col, width=140)
-        
-        # Add milestones to the treeview
+
         for milestone in milestones:
             status = "Completed" if milestone["completed"] else "In Progress"
             completion_date = milestone["completion_date"] if milestone["completed"] else "-"
@@ -460,19 +428,16 @@ def view_milestones():
             ))
         
         milestone_tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Button frame
+
         button_frame = tk.Frame(milestone_window)
         button_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        # Toggle completion button
+
         def toggle_milestone():
             selected = milestone_tree.focus()
             if selected:
                 values = milestone_tree.item(selected, "values")
                 milestone_description = values[0]
-                
-                # Find the milestone in the data
+
                 for i, milestone in enumerate(milestones):
                     if milestone["description"] == milestone_description:
                         milestone["completed"] = not milestone["completed"]
@@ -480,8 +445,7 @@ def view_milestones():
                             milestone["completion_date"] = str(date.today())
                         else:
                             milestone["completion_date"] = None
-                        
-                        # Update the treeview
+
                         status = "Completed" if milestone["completed"] else "In Progress"
                         completion_date = milestone["completion_date"] if milestone["completed"] else "-"
                         milestone_tree.item(selected, values=(
@@ -496,19 +460,16 @@ def view_milestones():
         
         toggle_btn = tk.Button(button_frame, text="Toggle Completion", command=toggle_milestone)
         toggle_btn.pack(side=tk.LEFT, padx=5)
-        
-        # Delete milestone button
+
         def delete_milestone():
             selected = milestone_tree.focus()
             if selected:
                 values = milestone_tree.item(selected, "values")
                 milestone_description = values[0]
                 
-                # Confirm deletion
                 confirm = messagebox.askyesno("Confirm Delete", 
                                              f"Are you sure you want to delete milestone '{milestone_description}'?")
                 if confirm:
-                    # Find and remove the milestone
                     for i, milestone in enumerate(milestones):
                         if milestone["description"] == milestone_description:
                             del milestones[i]
@@ -518,15 +479,13 @@ def view_milestones():
         
         delete_btn = tk.Button(button_frame, text="Delete Milestone", command=delete_milestone)
         delete_btn.pack(side=tk.LEFT, padx=5)
-        
-        # Close button
+   
         close_btn = tk.Button(button_frame, text="Close", command=milestone_window.destroy)
         close_btn.pack(side=tk.RIGHT, padx=5)
 
 def update_five_year_goals_list():
     five_year_listbox.delete(0, tk.END)
     
-    # Sort goals by completion status and then by target date
     sorted_goals = sorted(
         data["five_year_goals"].items(),
         key=lambda x: (x[1]["completed"], x[1]["target_date"])
@@ -537,8 +496,7 @@ def update_five_year_goals_list():
         target_date = info["target_date"]
         milestone_count = len(info["milestones"])
         completed_milestones = sum(1 for m in info["milestones"] if m["completed"])
-        
-        # Calculate days remaining or completion info
+
         if not info["completed"]:
             try:
                 target = datetime.strptime(target_date, "%Y-%m-%d").date()
@@ -557,7 +515,6 @@ def update_five_year_goals_list():
         milestones_info = f"[{completed_milestones}/{milestone_count} milestones]" if milestone_count > 0 else ""
         five_year_listbox.insert(tk.END, f"{goal} | {status} | {target_date} | {days_info} {milestones_info}")
 
-# Add these functions for Lifetime Goals
 def add_lifetime_goal():
     goal = simpledialog.askstring("Add Lifetime Goal", "Enter goal description:")
     if goal and goal not in data["lifetime_goals"]:
@@ -582,8 +539,7 @@ def edit_lifetime_goal():
             if new_goal in data["lifetime_goals"]:
                 messagebox.showerror("Error", "This goal already exists.")
                 return
-                
-            # Copy goal data to new name and delete old one
+
             data["lifetime_goals"][new_goal] = data["lifetime_goals"][goal_name]
             del data["lifetime_goals"][goal_name]
             
@@ -597,9 +553,9 @@ def toggle_lifetime_goal_completion():
         current_state = data["lifetime_goals"][goal_name]["completed"]
         data["lifetime_goals"][goal_name]["completed"] = not current_state
         
-        if not current_state:  # If completing the goal
+        if not current_state: 
             data["lifetime_goals"][goal_name]["completion_date"] = str(date.today())
-        else:  # If un-completing the goal
+        else: 
             data["lifetime_goals"][goal_name]["completion_date"] = None
             
         update_lifetime_goals_list()
@@ -620,13 +576,11 @@ def edit_lifetime_goal_notes():
     if selected_goal:
         goal_name = selected_goal.split(" | ")[0]
         current_notes = data["lifetime_goals"][goal_name]["notes"]
-        
-        # Create notes editor window
+
         notes_window = tk.Toplevel(root)
         notes_window.title(f"Notes for '{goal_name}'")
         notes_window.geometry("600x400")
-        
-        # Add a text area for editing notes
+
         notes_frame = tk.Frame(notes_window)
         notes_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
@@ -635,14 +589,12 @@ def edit_lifetime_goal_notes():
         notes_text = tk.Text(notes_frame, wrap=tk.WORD, width=70, height=18)
         notes_text.pack(fill=tk.BOTH, expand=True)
         notes_text.insert(tk.END, current_notes)
-        
-        # Add scrollbar
+
         scrollbar = tk.Scrollbar(notes_text)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         notes_text.config(yscrollcommand=scrollbar.set)
         scrollbar.config(command=notes_text.yview)
-        
-        # Button frame
+
         button_frame = tk.Frame(notes_window)
         button_frame.pack(fill=tk.X, padx=10, pady=10)
         
@@ -665,44 +617,36 @@ def view_lifetime_details():
     if selected_goal:
         goal_name = selected_goal.split(" | ")[0]
         goal_info = data["lifetime_goals"][goal_name]
-        
-        # Create details window
+
         details_window = tk.Toplevel(root)
         details_window.title(f"Details for '{goal_name}'")
         details_window.geometry("600x400")
-        
-        # Details frame
+
         details_frame = tk.Frame(details_window)
         details_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Goal name
+
         tk.Label(details_frame, text="Goal:", font=("Arial", 12, "bold")).grid(row=0, column=0, sticky=tk.W, pady=5)
         tk.Label(details_frame, text=goal_name, font=("Arial", 12)).grid(row=0, column=1, sticky=tk.W, pady=5)
-        
-        # Completion status
+
         tk.Label(details_frame, text="Status:", font=("Arial", 12, "bold")).grid(row=1, column=0, sticky=tk.W, pady=5)
         status_text = "Completed" if goal_info["completed"] else "In Progress"
         tk.Label(details_frame, text=status_text, font=("Arial", 12)).grid(row=1, column=1, sticky=tk.W, pady=5)
-        
-        # Completion date if completed
+
         if goal_info["completed"]:
             tk.Label(details_frame, text="Completed on:", font=("Arial", 12, "bold")).grid(row=2, column=0, sticky=tk.W, pady=5)
             tk.Label(details_frame, text=goal_info["completion_date"], font=("Arial", 12)).grid(row=2, column=1, sticky=tk.W, pady=5)
         
-        # Notes section
         tk.Label(details_frame, text="Notes:", font=("Arial", 12, "bold")).grid(row=3, column=0, sticky=tk.NW, pady=5)
         
         notes_text = tk.Text(details_frame, wrap=tk.WORD, width=50, height=10)
         notes_text.grid(row=3, column=1, sticky=tk.W, pady=5)
         notes_text.insert(tk.END, goal_info["notes"])
-        notes_text.config(state=tk.DISABLED)  # Make read-only
+        notes_text.config(state=tk.DISABLED)  
         
-        # Add scrollbar to notes
         notes_scroll = tk.Scrollbar(details_frame, command=notes_text.yview)
         notes_scroll.grid(row=3, column=2, sticky=tk.NS)
         notes_text.config(yscrollcommand=notes_scroll.set)
         
-        # Button frame
         button_frame = tk.Frame(details_window)
         button_frame.pack(fill=tk.X, padx=10, pady=10)
         
@@ -720,17 +664,14 @@ def view_lifetime_details():
 def edit_lifetime_goal_notes_from_details(goal_name, notes_text_widget, parent_window):
     current_notes = data["lifetime_goals"][goal_name]["notes"]
     
-    # Create notes editor window
     notes_window = tk.Toplevel(parent_window)
     notes_window.title(f"Edit Notes for '{goal_name}'")
     notes_window.geometry("600x400")
     
-    # Add a text area for editing notes
     edit_text = tk.Text(notes_window, wrap=tk.WORD, width=70, height=18)
     edit_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
     edit_text.insert(tk.END, current_notes)
     
-    # Button frame
     button_frame = tk.Frame(notes_window)
     button_frame.pack(fill=tk.X, padx=10, pady=10)
     
@@ -739,7 +680,6 @@ def edit_lifetime_goal_notes_from_details(goal_name, notes_text_widget, parent_w
         data["lifetime_goals"][goal_name]["notes"] = new_notes
         save_data(data)
         
-        # Update the parent window's text widget
         notes_text_widget.config(state=tk.NORMAL)
         notes_text_widget.delete(1.0, tk.END)
         notes_text_widget.insert(tk.END, new_notes)
@@ -758,22 +698,20 @@ def toggle_lifetime_from_details(goal_name, window):
     current_state = data["lifetime_goals"][goal_name]["completed"]
     data["lifetime_goals"][goal_name]["completed"] = not current_state
     
-    if not current_state:  # If completing the goal
+    if not current_state:  
         data["lifetime_goals"][goal_name]["completion_date"] = str(date.today())
-    else:  # If un-completing the goal
+    else:  
         data["lifetime_goals"][goal_name]["completion_date"] = None
     
     update_lifetime_goals_list()
     save_data(data)
-    
-    # Close the details window and reopen to refresh
+
     window.destroy()
     view_lifetime_details()
 
 def update_lifetime_goals_list():
     lifetime_listbox.delete(0, tk.END)
-    
-    # Sort goals by completion status
+
     sorted_goals = sorted(
         data["lifetime_goals"].items(),
         key=lambda x: x[1]["completed"]
@@ -802,25 +740,22 @@ root.geometry("800x600")
 
 tab_control = ttk.Notebook(root)
 
-# Create tabs
 todo_tab = ttk.Frame(tab_control)
 four_month_tab = ttk.Frame(tab_control)
 five_year_tab = ttk.Frame(tab_control)
-lifetime_tab = ttk.Frame(tab_control)  # Add this line
+lifetime_tab = ttk.Frame(tab_control)
 
 tab_control.add(todo_tab, text='Daily Tasks')
 tab_control.add(four_month_tab, text='4-Month Goals')
 tab_control.add(five_year_tab, text='5-Year Goals')
-tab_control.add(lifetime_tab, text='Lifetime Goals')  # Add this line
+tab_control.add(lifetime_tab, text='Lifetime Goals') 
 
 tab_control.pack(expand=1, fill='both')
 
-# To-Do Tab
 task_listbox = tk.Listbox(todo_tab, width=50, height=15, font=("Arial", 10))
 task_listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 update_list()
 
-# Modify the button_frame section in the To-Do Tab:
 button_frame = tk.Frame(todo_tab)
 button_frame.pack(padx=10, pady=5, fill=tk.X)
 
@@ -848,7 +783,6 @@ toggle_button.pack(side=tk.LEFT, padx=5)
 exit_button = tk.Button(button_frame, text="Exit", command=exit_app)
 exit_button.pack(side=tk.RIGHT, padx=5)
 
-# 4-Month Goals Tab
 four_month_listbox = tk.Listbox(four_month_tab, width=80, height=15, font=("Arial", 10))
 four_month_listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
@@ -868,7 +802,6 @@ toggle_four_month_button.pack(side=tk.LEFT, padx=5)
 delete_four_month_button = tk.Button(four_month_button_frame, text="Delete Goal", command=delete_four_month_goal)
 delete_four_month_button.pack(side=tk.LEFT, padx=5)
 
-# 5-Year Goals Tab
 five_year_listbox = tk.Listbox(five_year_tab, width=80, height=15, font=("Arial", 10))
 five_year_listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
@@ -894,7 +827,6 @@ view_milestones_button.pack(side=tk.LEFT, padx=5)
 delete_five_year_button = tk.Button(five_year_button_frame, text="Delete Goal", command=delete_five_year_goal)
 delete_five_year_button.pack(side=tk.LEFT, padx=5)
 
-# Lifetime Goals Tab
 lifetime_listbox = tk.Listbox(lifetime_tab, width=80, height=15, font=("Arial", 10))
 lifetime_listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
@@ -920,7 +852,6 @@ toggle_lifetime_button.pack(side=tk.LEFT, padx=5)
 delete_lifetime_button = tk.Button(lifetime_button_frame, text="Delete Goal", command=delete_lifetime_goal)
 delete_lifetime_button.pack(side=tk.LEFT, padx=5)
 
-# Initialize the goal lists
 if "four_month_goals" not in data:
     data["four_month_goals"] = {}
 if "five_year_goals" not in data:
@@ -931,8 +862,5 @@ if "lifetime_goals" not in data:
 update_four_month_goals_list()
 update_five_year_goals_list()
 update_lifetime_goals_list()
-
-# Check if we need to reset daily tasks
-# check_daily_reset()
 
 root.mainloop()
