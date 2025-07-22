@@ -4,6 +4,9 @@ from tkinter import messagebox, simpledialog
 import json
 import os
 
+#TODO
+# add calories and protein to recipes
+
 class CookingApp:
     def __init__(self, root):
         # Initialize the Cooking app with dark mode and UI setup

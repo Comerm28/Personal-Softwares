@@ -146,7 +146,10 @@ def edit_notes():
         task_name = selected_task.split(" - ")[0]
         if "(" in task_name:
             task_name = task_name.split(" (")[0]
-            
+        if " 📝" in task_name:
+            ind = task_name.index(" 📝")
+            task_name = task_name[0:ind]
+        
         current_notes = data["tasks"][task_name].get("notes", "")
         
         new_notes = simpledialog.askstring("Edit Notes", 
