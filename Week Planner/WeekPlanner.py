@@ -3,11 +3,11 @@ from tkinter import ttk, messagebox, simpledialog
 import json
 import os
 
-DATA_FILE = "WeekPlanner/events.json"
+DATA_FILE = "Week Planner/events.json"
 
 def load_events():
-    if not os.path.exists("WeekPlanner"):
-        os.makedirs("WeekPlanner")
+    if not os.path.exists("Week Planner"):
+        os.makedirs("Week Planner")
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r") as file:
             return json.load(file)
