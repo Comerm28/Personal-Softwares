@@ -1,8 +1,11 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 import json
 import os
 from datetime import datetime
+from PIL import Image, ImageTk
+
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"}
 
 
 class PassportApp:
@@ -15,7 +18,7 @@ class PassportApp:
         self.text_fg = "#ffffff"
         self.accent_color = "#ff6b35"
         self.highlight_color = "#ff8c69"
-        self.data_path = os.path.join("Places", "places.json")
+        self.data_path = os.path.join("Passport", "places.json")
         self.categories = [
             "food",
             "scenery",
@@ -35,6 +38,7 @@ class PassportApp:
         self.places = self.load_places()
         self.create_widgets()
 
+    # ---------- UI skeleton ----------
     def create_widgets(self):
         style = ttk.Style()
         style.theme_use("default")
@@ -70,8 +74,18 @@ class PassportApp:
         tk.Button(
             btns,
             text="Add Place",
-            command=self.open_add_window,
+            command=self.open_edit_window,
             bg=self.accent_color,
+            fg="white",
+            relief=tk.FLAT,
+            padx=8,
+            pady=4,
+        ).pack(side=tk.LEFT, padx=4)
+        tk.Button(
+            btns,
+            text="Show Gallery",
+            command=self.open_gallery_selected,
+            bg="#666666",
             fg="white",
             relief=tk.FLAT,
             padx=8,
@@ -111,6 +125,7 @@ class PassportApp:
         )
         self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.listbox.bind("<Double-Button-1>", lambda e: self.open_details_selected())
+        self.listbox.bind("<<ListboxSelect>>", lambda e: self._update_preview_for_selection())
 
         sb = tk.Scrollbar(body, command=self.listbox.yview)
         sb.pack(side=tk.LEFT, fill=tk.Y)
@@ -138,6 +153,7 @@ class PassportApp:
 
         self.refresh_listbox()
 
+    # ---------- data ----------
     def compute_overall(self, scores: dict) -> float:
         if not scores:
             return 0.0
@@ -165,15 +181,21 @@ class PassportApp:
 
     def refresh_listbox(self):
         self.listbox.delete(0, tk.END)
-        for p in sorted(self.places, key=lambda x: x.get("overall", 0), reverse=True):
+        for p in sorted(
+            self.places, key=lambda x: x.get("date_visited", "0000-00"), reverse=True
+        ):
             name = p.get("name", "(unnamed)")
-            overall = p.get("overall", 0)
-            country = p.get("country", "")
-            display = f"{overall:5.1f}  —  {name}" + (
-                f" ({country})" if country else ""
-            )
+            date_str = p.get("date_visited", "")
+            display_date = "No Date"
+            if date_str:
+                try:
+                    display_date = datetime.strptime(date_str, "%Y-%m").strftime("%B %Y")
+                except ValueError:
+                    display_date = date_str
+            display = f"{display_date}  —  {name}"
             self.listbox.insert(tk.END, display)
 
+    # ---------- list actions ----------
     def open_add_window(self):
         self.open_edit_window()
 
@@ -183,9 +205,9 @@ class PassportApp:
             messagebox.showwarning("No selection", "Select a place to edit.")
             return
         idx = sel[0]
-        target = sorted(self.places, key=lambda x: x.get("overall", 0), reverse=True)[
-            idx
-        ]
+        target = sorted(
+            self.places, key=lambda x: x.get("date_visited", "0000-00"), reverse=True
+        )[idx]
         self.open_edit_window(target)
 
     def delete_selected(self):
@@ -195,7 +217,7 @@ class PassportApp:
             return
         idx = sel[0]
         sorted_places = sorted(
-            self.places, key=lambda x: x.get("overall", 0), reverse=True
+            self.places, key=lambda x: x.get("date_visited", "0000-00"), reverse=True
         )
         target = sorted_places[idx]
         if not messagebox.askyesno("Delete", f"Delete '{target.get('name')}'?"):
@@ -210,14 +232,166 @@ class PassportApp:
         self.preview.delete(1.0, tk.END)
         self.preview.config(state=tk.DISABLED)
 
+    # ---------- gallery ----------
+    def open_gallery_selected(self):
+        sel = self.listbox.curselection()
+        if not sel:
+            messagebox.showwarning("No Selection", "Select a place to view its gallery.")
+            return
+        idx = sel[0]
+        place = sorted(self.places, key=lambda x: x.get("date_visited", "0000-00"), reverse=True)[idx]
+        photo_dir = place.get("photo_dir")
+        if not photo_dir or not os.path.isdir(photo_dir):
+            messagebox.showerror("Error", f"The photo directory is invalid or not set.\nPath: {photo_dir}")
+            return
+        self.show_gallery_window(place, photo_dir)
+
+    def _list_images(self, dir_path):
+        try:
+            files = sorted(os.listdir(dir_path))
+        except Exception as e:
+            messagebox.showerror("Error", f"Cannot read folder:\n{e}")
+            return []
+        out = []
+        for f in files:
+            p = os.path.join(dir_path, f)
+            if os.path.isfile(p) and os.path.splitext(f.lower())[1] in IMAGE_EXTS:
+                out.append(p)
+        return out
+
+    def _make_scrollable(self, parent):
+        canvas = tk.Canvas(parent, highlightthickness=0, bg=self.bg_color)
+        vscroll = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
+        frame = ttk.Frame(canvas)
+        frame_id = canvas.create_window((0, 0), window=frame, anchor="nw")
+        canvas.configure(yscrollcommand=vscroll.set)
+
+        def on_cfg(event):
+            canvas.itemconfig(frame_id, width=event.width)
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        frame.bind("<Configure>", on_cfg)
+        canvas.grid(row=0, column=0, sticky="nsew")
+        vscroll.grid(row=0, column=1, sticky="ns")
+        parent.grid_rowconfigure(0, weight=1)
+        parent.grid_columnconfigure(0, weight=1)
+        return frame
+
+    def _show_image_viewer(self, parent, paths, start_idx=0):
+        win = tk.Toplevel(parent)
+        win.title("Viewer")
+        win.geometry("900x700")
+        win.configure(bg=self.bg_color)
+
+        idx = {"i": start_idx}
+        img_label = ttk.Label(win)
+        img_label.pack(fill="both", expand=True)
+        caption = ttk.Label(win, anchor="center")
+        caption.pack(side="bottom", fill="x")
+
+        cache = {"img": None}
+
+        def show(i):
+            if not paths:
+                return
+            i %= len(paths)
+            idx["i"] = i
+            p = paths[i]
+            try:
+                im = Image.open(p)
+                w = win.winfo_width() or 900
+                h = win.winfo_height() or 700
+                im.thumbnail((w - 40, h - 120))
+                cache["img"] = ImageTk.PhotoImage(im)
+                img_label.configure(image=cache["img"])
+                caption.configure(text=f"{os.path.basename(p)}   [{i+1}/{len(paths)}]")
+            except Exception as e:
+                messagebox.showerror("Error", f"Cannot open image:\n{p}\n{e}")
+
+        def prev_():
+            show(idx["i"] - 1)
+
+        def next_():
+            show(idx["i"] + 1)
+
+        nav = ttk.Frame(win)
+        nav.pack(side="bottom", pady=6)
+        ttk.Button(nav, text="Prev", command=prev_).pack(side="left", padx=4)
+        ttk.Button(nav, text="Next", command=next_).pack(side="left", padx=4)
+        win.bind("<Left>", lambda e: prev_())
+        win.bind("<Right>", lambda e: next_())
+        win.bind("<Configure>", lambda e: show(idx["i"]))
+        show(start_idx)
+
+    def show_gallery_window(self, place, directory, thumb_size=(200, 200), columns=4):
+        paths = self._list_images(directory)
+        if not paths:
+            messagebox.showinfo("Gallery", "No images found.")
+            return
+
+        gallery_win = tk.Toplevel(self.root)
+        gallery_win.title(f"Gallery — {place.get('name','')}")
+        gallery_win.geometry("900x700")
+        gallery_win.configure(bg=self.bg_color)
+
+        container = ttk.Frame(gallery_win)
+        container.pack(fill="both", expand=True)
+        grid_frame = self._make_scrollable(container)
+
+        thumbs = []
+
+        def open_view(i):
+            self._show_image_viewer(gallery_win, paths, i)
+
+        for i, p in enumerate(paths):
+            try:
+                im = Image.open(p)
+                im.thumbnail(thumb_size)
+                tkimg = ImageTk.PhotoImage(im)
+            except Exception:
+                continue
+            thumbs.append(tkimg)
+            cell = ttk.Frame(grid_frame, padding=6, borderwidth=1, relief="solid")
+            r, c = divmod(i, columns)
+            cell.grid(row=r, column=c, padx=6, pady=6, sticky="nsew")
+            lbl = ttk.Label(cell, image=tkimg)
+            lbl.pack()
+            cap = ttk.Label(cell, text=os.path.basename(p), width=30)
+            cap.pack()
+            lbl.bind("<Button-1>", lambda e, i=i: open_view(i))
+            cap.bind("<Button-1>", lambda e, i=i: open_view(i))
+
+        footer = ttk.Frame(gallery_win)
+        footer.pack(fill="x")
+        ttk.Label(footer, text=f"{len(paths)} images").pack(side="left", padx=8)
+        ttk.Button(
+            footer,
+            text="Open Folder",
+            command=lambda: self._open_folder(directory),
+        ).pack(side="right", padx=8)
+
+    def _open_folder(self, path):
+        try:
+            if os.name == "nt":
+                os.startfile(path)
+            elif sys.platform == "darwin":
+                import subprocess
+                subprocess.run(["open", path])
+            else:
+                import subprocess
+                subprocess.run(["xdg-open", path])
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not open folder:\n{e}")
+
+    # ---------- details ----------
     def open_details_selected(self):
         sel = self.listbox.curselection()
         if not sel:
             return
         idx = sel[0]
-        target = sorted(self.places, key=lambda x: x.get("overall", 0), reverse=True)[
-            idx
-        ]
+        target = sorted(
+            self.places, key=lambda x: x.get("date_visited", "0000-00"), reverse=True
+        )[idx]
         self.show_details_window(target)
 
     def show_details_window(self, place):
@@ -291,6 +465,7 @@ class PassportApp:
             pady=4,
         ).pack(side=tk.RIGHT)
 
+    # ---------- editor ----------
     def open_edit_window(self, place=None):
         is_edit = place is not None
         w = tk.Toplevel(self.root)
@@ -327,6 +502,47 @@ class PassportApp:
         country_ent.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(8, 0))
         if is_edit:
             country_ent.insert(0, place.get("country", ""))
+
+        date_frame = tk.Frame(w, bg=self.bg_color)
+        date_frame.pack(fill=tk.X, padx=12, pady=(6, 0))
+        tk.Label(
+            date_frame,
+            text="Date Visited (YYYY-MM):",
+            bg=self.bg_color,
+            fg=self.text_fg,
+            font=("Arial", 10, "bold"),
+        ).pack(side=tk.LEFT)
+        date_ent = tk.Entry(
+            date_frame, bg=self.text_bg, fg=self.text_fg, font=("Arial", 11)
+        )
+        date_ent.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(8, 0))
+        if is_edit:
+            date_ent.insert(0, place.get("date_visited", ""))
+
+        photo_dir_frame = tk.Frame(w, bg=self.bg_color)
+        photo_dir_frame.pack(fill=tk.X, padx=12, pady=(6, 0))
+        tk.Label(
+            photo_dir_frame,
+            text="Photo Directory:",
+            bg=self.bg_color,
+            fg=self.text_fg,
+            font=("Arial", 10, "bold"),
+        ).pack(side=tk.LEFT)
+        photo_dir_ent = tk.Entry(
+            photo_dir_frame, bg=self.text_bg, fg=self.text_fg, font=("Arial", 11)
+        )
+        photo_dir_ent.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(8, 0))
+
+        def pick_dir():
+            d = filedialog.askdirectory()
+            if d:
+                photo_dir_ent.delete(0, tk.END)
+                photo_dir_ent.insert(0, d)
+
+        ttk.Button(photo_dir_frame, text="Browse", command=pick_dir).pack(side=tk.LEFT, padx=6)
+
+        if is_edit:
+            photo_dir_ent.insert(0, place.get("photo_dir", ""))
 
         scores_frame = tk.Frame(w, bg=self.bg_color)
         scores_frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=(6, 0))
@@ -392,20 +608,20 @@ class PassportApp:
                 messagebox.showwarning("Missing name", "Please enter a place name.")
                 return
             country = country_ent.get().strip()
+            date_visited = date_ent.get().strip()
+            photo_dir = photo_dir_ent.get().strip()
             scores = {c: int(vars_map[c].get()) for c in self.categories}
             overall = self.compute_overall(scores)
             entry = {
-                "id": (
-                    place.get("id")
-                    if is_edit
-                    else f"{name}_{datetime.now().timestamp()}"
-                ),
+                "id": (place.get("id") if is_edit else f"{name}_{datetime.now().timestamp()}"),
                 "name": name,
                 "country": country,
+                "date_visited": date_visited,
+                "photo_dir": photo_dir,
                 "scores": scores,
                 "overall": overall,
                 "notes": notes_txt.get(1.0, tk.END).strip(),
-                "visited": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "modified": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             }
             if is_edit:
                 for i, p in enumerate(self.places):
@@ -439,6 +655,7 @@ class PassportApp:
             pady=6,
         ).pack(side=tk.RIGHT, pady=12)
 
+    # ---------- preview ----------
     def _update_preview_for_selection(self):
         sel = self.listbox.curselection()
         if not sel:
@@ -447,11 +664,22 @@ class PassportApp:
             self.preview.config(state=tk.DISABLED)
             return
         idx = sel[0]
-        p = sorted(self.places, key=lambda x: x.get("overall", 0), reverse=True)[idx]
+        p = sorted(
+            self.places, key=lambda x: x.get("date_visited", "0000-00"), reverse=True
+        )[idx]
+        date_str = p.get("date_visited", "N/A")
+        display_date = date_str
+        if date_str != "N/A":
+            try:
+                display_date = datetime.strptime(date_str, "%Y-%m").strftime("%B %Y")
+            except ValueError:
+                display_date = date_str
         lines = [
             f"Name: {p.get('name')}",
             f"Country: {p.get('country','')}",
+            f"Date Visited: {display_date}",
             f"Overall: {p.get('overall'):.1f}",
+            f"Photo Directory: {p.get('photo_dir', 'N/A')}",
             "",
             "Scores:",
         ]
@@ -469,7 +697,6 @@ class PassportApp:
 def main():
     root = tk.Tk()
     app = PassportApp(root)
-    app.listbox.bind("<<ListboxSelect>>", lambda e: app._update_preview_for_selection())
     root.mainloop()
 
 
