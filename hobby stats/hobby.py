@@ -16,7 +16,7 @@ class HobbyProgressApp:
         self.accent_color = "#4caf50" 
         self.highlight_color = "#81c784"
         
-        self.data_path = os.path.join("Hobby Tracker", "progress_data.json")
+        self.data_path = os.path.join("hobby stats", "progress_data.json")
         self.hobbies = self.load_data()
         self.create_widgets()
 
