@@ -8,7 +8,7 @@ class JournalApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Journal App")
-        self.root.geometry("800x600") 
+        self.root.geometry("800x600+50+50") 
         
         self.bg_color = "#2d2d2d"
         self.text_bg = "#3d3d3d"
@@ -150,7 +150,7 @@ class JournalApp:
     def show_entry_window(self, entry):
         entry_window = tk.Toplevel(self.root)
         entry_window.title(f"Journal Entry - {entry['date']}")
-        entry_window.geometry("800x600") 
+        entry_window.geometry("800x600+50+50") 
         entry_window.configure(bg=self.bg_color)
         
         entry_window.columnconfigure(0, weight=1)

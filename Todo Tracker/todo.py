@@ -175,7 +175,7 @@ def view_task_details():
         
         details_window = tk.Toplevel(root)
         details_window.title(f"Details for '{task_name}'")
-        details_window.geometry("400x300")
+        details_window.geometry("400x300+50+50")
        
         tk.Label(details_window, text="Task:", font=("Arial", 10, "bold")).grid(row=0, column=0, sticky=tk.W, padx=10, pady=5)
         tk.Label(details_window, text=task_name).grid(row=0, column=1, sticky=tk.W, padx=10, pady=5)
@@ -411,7 +411,7 @@ def view_milestones():
         
         milestone_window = tk.Toplevel(root)
         milestone_window.title(f"Milestones for '{goal_name}'")
-        milestone_window.geometry("600x400")
+        milestone_window.geometry("600x400+50+50")
 
         columns = ("Description", "Target Date", "Status", "Completion Date")
         milestone_tree = ttk.Treeview(milestone_window, columns=columns, show="headings")
@@ -582,7 +582,7 @@ def edit_lifetime_goal_notes():
 
         notes_window = tk.Toplevel(root)
         notes_window.title(f"Notes for '{goal_name}'")
-        notes_window.geometry("600x400")
+        notes_window.geometry("600x400+50+50")
 
         notes_frame = tk.Frame(notes_window)
         notes_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -623,7 +623,7 @@ def view_lifetime_details():
 
         details_window = tk.Toplevel(root)
         details_window.title(f"Details for '{goal_name}'")
-        details_window.geometry("600x400")
+        details_window.geometry("600x400+50+50")
 
         details_frame = tk.Frame(details_window)
         details_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -669,7 +669,7 @@ def edit_lifetime_goal_notes_from_details(goal_name, notes_text_widget, parent_w
     
     notes_window = tk.Toplevel(parent_window)
     notes_window.title(f"Edit Notes for '{goal_name}'")
-    notes_window.geometry("600x400")
+    notes_window.geometry("600x400+50+50")
     
     edit_text = tk.Text(notes_window, wrap=tk.WORD, width=70, height=18)
     edit_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -739,7 +739,7 @@ data = load_data()
 
 root = tk.Tk()
 root.title("Complete Goal Tracker")
-root.geometry("800x600")
+root.geometry("800x600+50+50")
 
 tab_control = ttk.Notebook(root)
 

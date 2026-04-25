@@ -11,7 +11,7 @@ class AssumedExpensesApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Assumed Expenses")
-        self.root.geometry("800x600")
+        self.root.geometry("800x600+50+50")
 
         # styling (dark theme similar to provided file)
         self.bg_color = "#2d2d2d"
@@ -221,7 +221,7 @@ class AssumedExpensesApp:
 
         w = tk.Toplevel(self.root)
         w.title(f"Expense: {e['name']}")
-        w.geometry("400x220")
+        w.geometry("400x220+50+50")
         w.configure(bg=self.bg_color)
         tk.Label(w, text=e['name'], font=("Arial", 14, "bold"), bg=self.bg_color, fg=self.text_fg).pack(anchor="w", padx=15, pady=(15,0))
         tk.Label(w, text=f"Cost per purchase: ${e['cost']:.2f}", bg=self.bg_color, fg=self.text_fg, font=("Arial", 11)).pack(anchor="w", padx=15, pady=6)

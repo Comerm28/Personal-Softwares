@@ -9,7 +9,7 @@ class ShowRankerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Show Ranker")
-        self.root.geometry("900x600")
+        self.root.geometry("900x600+50+50")
         self.bg_color = "#2d2d2d"
         self.text_bg = "#3d3d3d"
         self.text_fg = "#ffffff"
@@ -227,7 +227,7 @@ class ShowRankerApp:
     def show_details_window(self, show):
         w = tk.Toplevel(self.root)
         w.title(show.get("name", "Details"))
-        w.geometry("640x520")
+        w.geometry("640x520+50+50")
         w.configure(bg=self.bg_color)
         header = tk.Label(
             w,
@@ -301,7 +301,7 @@ class ShowRankerApp:
         is_edit = show is not None
         w = tk.Toplevel(self.root)
         w.title("Edit Show" if is_edit else "Add Show")
-        w.geometry("760x640")
+        w.geometry("760x640+50+50")
         w.configure(bg=self.bg_color)
 
         name_frame = tk.Frame(w, bg=self.bg_color)

@@ -12,7 +12,7 @@ class PassportApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Places I've Been")
-        self.root.geometry("900x600")
+        self.root.geometry("900x600+50+50")
         self.bg_color = "#2d2d2d"
         self.text_bg = "#3d3d3d"
         self.text_fg = "#ffffff"
@@ -280,7 +280,7 @@ class PassportApp:
     def _show_image_viewer(self, parent, paths, start_idx=0):
         win = tk.Toplevel(parent)
         win.title("Viewer")
-        win.geometry("900x700")
+        win.geometry("900x700+50+50")
         win.configure(bg=self.bg_color)
 
         idx = {"i": start_idx}
@@ -331,7 +331,7 @@ class PassportApp:
 
         gallery_win = tk.Toplevel(self.root)
         gallery_win.title(f"Gallery — {place.get('name','')}")
-        gallery_win.geometry("900x700")
+        gallery_win.geometry("900x700+50+50")
         gallery_win.configure(bg=self.bg_color)
 
         container = ttk.Frame(gallery_win)
@@ -397,7 +397,7 @@ class PassportApp:
     def show_details_window(self, place):
         w = tk.Toplevel(self.root)
         w.title(place.get("name", "Details"))
-        w.geometry("700x520")
+        w.geometry("700x520+50+50")
         w.configure(bg=self.bg_color)
         header = tk.Label(
             w,
@@ -470,7 +470,7 @@ class PassportApp:
         is_edit = place is not None
         w = tk.Toplevel(self.root)
         w.title("Edit Place" if is_edit else "Add Place")
-        w.geometry("760x740")
+        w.geometry("760x740+50+50")
         w.configure(bg=self.bg_color)
 
         top = tk.Frame(w, bg=self.bg_color)

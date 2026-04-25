@@ -135,7 +135,7 @@ data = load_data()
 
 root = tk.Tk()
 root.title("Personal Finance Tracker")
-root.geometry("800x600")
+root.geometry("800x600+50+50")
 
 tab_control = ttk.Notebook(root)
 

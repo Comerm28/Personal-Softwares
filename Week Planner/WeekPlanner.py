@@ -51,7 +51,7 @@ class WeekPlannerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Week Planner")
-        self.root.geometry("1000x600")
+        self.root.geometry("1000x600+50+50")
         self.bg_color = "#2d2d2d"
         self.event_color = "#3d3d3d"
         self.text_color = "#ffffff"

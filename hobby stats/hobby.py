@@ -8,7 +8,7 @@ class HobbyProgressApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Hobby Progress & Hours Tracker")
-        self.root.geometry("900x600")
+        self.root.geometry("900x600+50+50")
         
         self.bg_color = "#2d2d2d"
         self.text_bg = "#3d3d3d"
@@ -67,7 +67,7 @@ class HobbyProgressApp:
         is_edit = hobby is not None
         w = tk.Toplevel(self.root)
         w.title("Update Progress")
-        w.geometry("400x500")
+        w.geometry("400x500+50+50")
         w.configure(bg=self.bg_color)
 
         tk.Label(w, text="Hobby Name:", bg=self.bg_color, fg=self.text_fg).pack(pady=(15, 0))

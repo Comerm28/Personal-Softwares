@@ -7,7 +7,7 @@ class BudgetApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Quarterly Budget Tracker")
-        self.root.geometry("900x700")
+        self.root.geometry("900x700+50+50")
         
         # Colors - Matching your Journal App style
         self.bg_color = "#2d2d2d"

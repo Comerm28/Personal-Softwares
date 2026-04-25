@@ -10,7 +10,7 @@ class GymDashApp:
         # Initialize the Gym Dashboard app
         self.root = root
         self.root.title("Gym Dashboard")
-        self.root.geometry("800x600")
+        self.root.geometry("800x600+50+50")
         
         self.bg_color = "#2d2d2d"
         self.text_bg = "#3d3d3d"

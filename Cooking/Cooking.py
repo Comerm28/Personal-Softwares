@@ -12,7 +12,7 @@ class CookingApp:
         # Initialize the Cooking app with dark mode and UI setup
         self.root = root
         self.root.title("Recipe Collection")
-        self.root.geometry("800x600")
+        self.root.geometry("800x600+50+50")
         
         self.bg_color = "#2d2d2d"
         self.text_bg = "#3d3d3d"
@@ -298,7 +298,7 @@ class CookingApp:
         # Show the full recipe details in a new window
         recipe_window = tk.Toplevel(self.root)
         recipe_window.title(f"Recipe: {recipe['name']}")
-        recipe_window.geometry("800x600")
+        recipe_window.geometry("800x600+50+50")
         recipe_window.configure(bg=self.bg_color)
         
         recipe_window.columnconfigure(0, weight=1)
@@ -367,7 +367,7 @@ class CookingApp:
         # Show only the ingredients of a recipe in a new window
         ingredients_window = tk.Toplevel(self.root)
         ingredients_window.title(f"Ingredients for: {recipe['name']}")
-        ingredients_window.geometry("500x400")
+        ingredients_window.geometry("500x400+50+50")
         ingredients_window.configure(bg=self.bg_color)
         
         ingredients_window.columnconfigure(0, weight=1)
